@@ -11,8 +11,16 @@ stellar-localdao/
 ├── frontend/      # React + Vite user interface
 ├── contract/      # Soroban smart contracts (Rust)
 ├── backend/       # Optional Node.js API layer
+├── WHITEPAPER.md  # Canonical whitepaper
 └── README.md
 ```
+
+---
+
+## 📄 Whitepaper
+
+* Repo copy: `WHITEPAPER.md`
+* App-readable page: `/whitepaper.html` (served from `frontend/public/whitepaper.html`)
 
 ---
 
@@ -57,14 +65,105 @@ cargo test
 ## 🔄 Application Flow
 
 ```mermaid
-flowchart TD
-    A["User"] --> B["Frontend (React)"]
-    B --> D["Smart Contract (Soroban)"]
-    B --> C["Backend (Optional)"]
-    C --> D
-    D --> E["Stellar Network"]
-    E --> D
-    D --> B
+flowchart TB
+    subgraph Factory["LocalDAOFactory (Soroban)"]
+        IMPL["DAO Implementation"]
+        CREATE["create_dao()"]
+        REGISTRY["DAO Registry & Metadata"]
+        IMPL --> CREATE
+        CREATE --> REGISTRY
+    end
+
+    subgraph DAOs["Location DAOs (Instances)"]
+        D1["DAO A"]
+        D2["DAO B"]
+        D3["..."]
+    end
+
+    subgraph Roles["Roles"]
+        C["Creator"]
+        A["Admins"]
+        F["Finance Managers"]
+        M["Verified Members"]
+        C --> A
+        C --> F
+        A --> M
+    end
+
+    subgraph Investments["Investment Lifecycle"]
+        I1["Create Proposal"]
+        I2["Vote"]
+        I3["Activate or Incomplete"]
+        I4["Deposit Yield"]
+        I5["Claim Yield"]
+        I6["Close / Sweep"]
+        I1 --> I2 --> I3 --> I4 --> I5 --> I6
+    end
+
+    Factory --> DAOs
+    DAOs --> Roles
+    DAOs --> Investments
+```
+
+---
+
+## 🧠 Investment Lifecycle (State Machine)
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: create_investment()
+
+    PENDING --> ACTIVE: activate_investment()
+    PENDING --> INCOMPLETE: mark_incomplete()
+
+    INCOMPLETE --> [*]: withdraw_stake()
+
+    ACTIVE --> ACTIVE: deposit_yield()
+    ACTIVE --> ENDED: close_investment()
+
+    ENDED --> [*]: sweep_unclaimed()
+```
+
+---
+
+## 🔐 Governance Permissions
+
+```mermaid
+flowchart LR
+    subgraph Who["Who"]
+        Creator["Creator"]
+        Admin["Admin"]
+        Finance["Finance Manager"]
+        Member["Member"]
+    end
+
+    subgraph CanDo["Can Do"]
+        Pause["Pause / Unpause"]
+        AddAdmin["Manage Admins"]
+        AddFinance["Manage Finance Roles"]
+        AddMember["Manage Members"]
+        CreateInv["Create Proposals"]
+        Activate["Activate / Mark Incomplete"]
+        Extend["Extend Deadline"]
+        DepositYield["Deposit Yield"]
+        CloseInv["Close Investment"]
+        Sweep["Sweep Unclaimed"]
+        Vote["Vote"]
+        Claim["Claim / Withdraw"]
+    end
+
+    Creator --> Pause
+    Creator --> AddAdmin
+    Creator --> AddFinance
+    Admin --> AddMember
+    Admin --> CreateInv
+    Admin --> Activate
+    Admin --> CloseInv
+    Admin --> Sweep
+    Finance --> Extend
+    Finance --> DepositYield
+    Member --> Vote
+    Member --> Claim
 ```
 
 ---
@@ -78,72 +177,12 @@ sequenceDiagram
     participant C as Contract
     participant S as Stellar
 
-    U->>F: Trigger action (vote / propose)
-    F->>C: Send transaction
-    C->>S: Execute on-chain
+    U->>F: Trigger action
+    F->>C: Submit transaction
+    C->>S: Execute logic
     S-->>C: Confirm state
     C-->>F: Return result
     F-->>U: Update UI
-```
-
----
-
-## 🧠 Governance Lifecycle
-
-```mermaid
-stateDiagram-v2
-    [*] --> ProposalCreated
-    ProposalCreated --> VotingActive
-    VotingActive --> Passed
-    VotingActive --> Rejected
-    Passed --> ExecutionPending
-    ExecutionPending --> Executed
-    Rejected --> [*]
-    Executed --> [*]
-```
-
----
-
-## 💰 Treasury Flow
-
-```mermaid
-flowchart TD
-    A["User Deposits"] --> B["Treasury Pool"]
-    B --> C["Proposal Created"]
-    C --> D["Community Votes"]
-    D --> E{"Approved?"}
-    E -->|Yes| F["Funds Released"]
-    E -->|No| G["Funds Locked"]
-```
-
----
-
-## 🔐 Governance Permissions
-
-```mermaid
-flowchart TD
-    A["User"] --> B{"Has Voting Power?"}
-    B -->|Yes| C["Can Vote"]
-    B -->|No| D["View Only"]
-
-    C --> E{"Proposal Passed?"}
-    E -->|Yes| F["Execute Proposal"]
-    E -->|No| G["No Action"]
-```
-
----
-
-## ⚙️ Contract Execution Flow
-
-```mermaid
-flowchart TD
-    A["Call Contract Function"] --> B["Validate Input"]
-    B --> C{"Valid?"}
-    C -->|No| D["Revert"]
-    C -->|Yes| E["Load State"]
-    E --> F["Apply Logic"]
-    F --> G["Update Storage"]
-    G --> H["Return Response"]
 ```
 
 ---
@@ -154,6 +193,7 @@ flowchart TD
 * [ ] Wallet integration
 * [ ] Treasury execution
 * [ ] Token-based governance
+* [ ] DAO factory deployment
 
 ---
 
