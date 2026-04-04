@@ -111,16 +111,6 @@ flowchart TD
     E -->|No| G[No Action]
 ```
 
----
-
-## 🔄 Migration (Solidity → Soroban)
-
-| Solidity (EVM) | Soroban (Rust)   |
-| -------------- | ---------------- |
-| msg.sender     | env.invoker()    |
-| mapping        | env.storage()    |
-| require()      | Result<T, Error> |
-| events         | env.events()     |
 
 ---
 
