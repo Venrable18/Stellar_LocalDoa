@@ -1,4 +1,4 @@
-# 🌟 Stellar LocalDAO
+#  Stellar LocalDAO
 
 LocalDAO is a neighborhood investment and governance platform built on the Stellar network using Soroban smart contracts (Rust), enabling on-chain proposals, voting, and treasury coordination.
 
