@@ -58,13 +58,32 @@ cargo test
 
 ```mermaid
 flowchart TD
-    A[User] --> B[Frontend (React)]
-    B --> D[Smart Contract (Soroban)]
-    B --> C[Backend (Optional)]
+    A["User"] --> B["Frontend (React)"]
+    B --> D["Smart Contract (Soroban)"]
+    B --> C["Backend (Optional)"]
     C --> D
-    D --> E[Stellar Network]
+    D --> E["Stellar Network"]
     E --> D
     D --> B
+```
+
+---
+
+## 🔁 End-to-End Interaction Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant C as Contract
+    participant S as Stellar
+
+    U->>F: Trigger action (vote / propose)
+    F->>C: Send transaction
+    C->>S: Execute on-chain
+    S-->>C: Confirm state
+    C-->>F: Return result
+    F-->>U: Update UI
 ```
 
 ---
@@ -77,7 +96,8 @@ stateDiagram-v2
     ProposalCreated --> VotingActive
     VotingActive --> Passed
     VotingActive --> Rejected
-    Passed --> Executed
+    Passed --> ExecutionPending
+    ExecutionPending --> Executed
     Rejected --> [*]
     Executed --> [*]
 ```
@@ -87,13 +107,13 @@ stateDiagram-v2
 ## 💰 Treasury Flow
 
 ```mermaid
-flowchart LR
-    A[User Deposits] --> B[Treasury Pool]
-    B --> C[Proposal Created]
-    C --> D[Community Votes]
-    D --> E{Approved?}
-    E -->|Yes| F[Funds Released]
-    E -->|No| G[Funds Locked]
+flowchart TD
+    A["User Deposits"] --> B["Treasury Pool"]
+    B --> C["Proposal Created"]
+    C --> D["Community Votes"]
+    D --> E{"Approved?"}
+    E -->|Yes| F["Funds Released"]
+    E -->|No| G["Funds Locked"]
 ```
 
 ---
@@ -102,15 +122,29 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A[User] --> B{Has Voting Power?}
-    B -->|Yes| C[Can Vote]
-    B -->|No| D[View Only]
+    A["User"] --> B{"Has Voting Power?"}
+    B -->|Yes| C["Can Vote"]
+    B -->|No| D["View Only"]
 
-    C --> E{Proposal Passed?}
-    E -->|Yes| F[Execute Proposal]
-    E -->|No| G[No Action]
+    C --> E{"Proposal Passed?"}
+    E -->|Yes| F["Execute Proposal"]
+    E -->|No| G["No Action"]
 ```
 
+---
+
+## ⚙️ Contract Execution Flow
+
+```mermaid
+flowchart TD
+    A["Call Contract Function"] --> B["Validate Input"]
+    B --> C{"Valid?"}
+    C -->|No| D["Revert"]
+    C -->|Yes| E["Load State"]
+    E --> F["Apply Logic"]
+    F --> G["Update Storage"]
+    G --> H["Return Response"]
+```
 
 ---
 
